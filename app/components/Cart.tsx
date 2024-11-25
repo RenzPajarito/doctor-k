@@ -33,78 +33,80 @@ const Cart = ({
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Cart</h2>
       {cart.length > 0 ? (
         <div className="space-y-4">
-          {cart.map((item) => {
-            const itemTotal =
-              (item.price +
-                item.selectedOptions.reduce((sum, opt) => sum + opt.price, 0)) *
-              item.quantity;
+          <div className="max-h-[60vh] overflow-y-auto">
+            {cart.map((item) => {
+              const itemTotal =
+                (item.price +
+                  item.selectedOptions.reduce((sum, opt) => sum + opt.price, 0)) *
+                item.quantity;
 
-            return (
-              <div
-                key={`${item.id}-${item.selectedOptions
-                  .map((o) => o.id)
-                  .join("-")}`}
-                className="flex flex-col bg-white p-4 rounded-lg shadow"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    {!item.selectedOptions.length && (
-                      <h3 className="font-medium text-gray-900">{item.name}</h3>
-                    )}
-                    {item.selectedOptions.length > 0 && (
-                      <div className="mt-1">
-                        {item.selectedOptions.map((option) => (
-                          <span
-                            key={option.id}
-                            className="inline-block mr-2 text-md text-gray-600"
-                          >
-                            {option.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <p className="text-gray-600">
-                      ₱{item.price.toFixed(2)} each
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          onUpdateQuantity(
-                            item.id,
-                            item.quantity - 1,
-                            item.selectedOptions
-                          )
-                        }
-                        className="p-1 rounded-full hover:bg-gray-100"
-                        aria-label="Decrease quantity"
-                      >
-                        <span className="text-xl">-</span>
-                      </button>
-                      <span className="w-8 text-center">{item.quantity}</span>
-                      <button
-                        onClick={() =>
-                          onUpdateQuantity(
-                            item.id,
-                            item.quantity + 1,
-                            item.selectedOptions
-                          )
-                        }
-                        className="p-1 rounded-full hover:bg-gray-100"
-                        aria-label="Increase quantity"
-                      >
-                        <span className="text-xl">+</span>
-                      </button>
+              return (
+                <div
+                  key={`${item.id}-${item.selectedOptions
+                    .map((o) => o.id)
+                    .join("-")}`}
+                  className="flex flex-col bg-white p-4 rounded-lg shadow"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      {!item.selectedOptions.length && (
+                        <h3 className="font-medium text-gray-900">{item.name}</h3>
+                      )}
+                      {item.selectedOptions.length > 0 && (
+                        <div className="mt-1">
+                          {item.selectedOptions.map((option) => (
+                            <span
+                              key={option.id}
+                              className="inline-block mr-2 text-md text-gray-600"
+                            >
+                              {option.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-gray-600">
+                        ₱{item.price.toFixed(2)} each
+                      </p>
                     </div>
-                    <p className="font-semibold text-orange-600">
-                      ₱{itemTotal.toFixed(2)}
-                    </p>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() =>
+                            onUpdateQuantity(
+                              item.id,
+                              item.quantity - 1,
+                              item.selectedOptions
+                            )
+                          }
+                          className="p-1 rounded-full hover:bg-gray-100"
+                          aria-label="Decrease quantity"
+                        >
+                          <span className="text-xl">-</span>
+                        </button>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <button
+                          onClick={() =>
+                            onUpdateQuantity(
+                              item.id,
+                              item.quantity + 1,
+                              item.selectedOptions
+                            )
+                          }
+                          className="p-1 rounded-full hover:bg-gray-100"
+                          aria-label="Increase quantity"
+                        >
+                          <span className="text-xl">+</span>
+                        </button>
+                      </div>
+                      <p className="font-semibold text-orange-600">
+                        ₱{itemTotal.toFixed(2)}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
           <div className="flex justify-between items-center border-t pt-4 mt-4">
             <h3 className="text-lg font-semibold">Total:</h3>
             <p className="text-xl font-bold text-orange-600">

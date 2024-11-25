@@ -17,20 +17,19 @@ import Cart from "@/app/components/Cart";
 import OrderHistory from "@/app/components/OrderHistory";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { FaShoppingCart } from 'react-icons/fa';
 
-// Category represents a food or drink category
 export interface Category {
-  id: string; // Unique identifier for the category
-  name: string; // Name of the category
+  id: string;
+  name: string;
 }
 
-// MenuItem represents a food or drink item within a category
 export interface MenuItem {
-  id: string; // Unique identifier for the menu item
-  name: string; // Name of the menu item
-  price: number; // Price of the menu item
-  category: string; // The ID of the category the item belongs to
-  imageUrl?: string; // Optional URL for an image of the menu item
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  imageUrl?: string;
   options?: {
     id: string;
     name: string;
@@ -40,13 +39,11 @@ export interface MenuItem {
   }[];
 }
 
-// Add new CartItem interface
 export interface CartItem extends MenuItem {
   quantity: number;
   selectedOptions: SelectedOption[];
 }
 
-// Add Order interface
 export interface Order {
   id?: string;
   deviceId: string;
@@ -59,14 +56,12 @@ export interface Order {
   paymentStatus: "pending" | "paid";
 }
 
-// Add new interface for selected options
 export interface SelectedOption {
   id: string;
   name: string;
   price: number;
 }
 
-// Add these interfaces for Firestore data
 interface CategoryData {
   name: string;
 }
@@ -85,7 +80,6 @@ interface MenuItemData {
   }[];
 }
 
-// Add function to get/generate device ID
 const getDeviceId = () => {
   const storageKey = "device_id";
   let deviceId = localStorage.getItem(storageKey);
@@ -98,7 +92,6 @@ const getDeviceId = () => {
   return deviceId;
 };
 
-// Add function to save order to Firestore
 const saveOrder = async (order: Omit<Order, "id">) => {
   try {
     const orderRef = await addDoc(collection(db, "orders"), order);
@@ -109,7 +102,6 @@ const saveOrder = async (order: Omit<Order, "id">) => {
   }
 };
 
-// Update the fetchMenuData function with proper typing
 async function fetchMenuData() {
   try {
     const categoriesSnapshot = await getDocs(collection(db, "categories"));
@@ -134,7 +126,6 @@ async function fetchMenuData() {
   }
 }
 
-// Add this function to update orders in Firestore
 const updateTableNumberInFirestore = async (
   newTableNumber: string,
   deviceId: string
@@ -149,7 +140,6 @@ const updateTableNumberInFirestore = async (
 
     const snapshot = await getDocs(pendingOrdersQuery);
 
-    // Update all pending orders with the new table number
     const updatePromises = snapshot.docs.map((doc) => {
       return updateDoc(doc.ref, {
         tableNumber: newTableNumber,
@@ -163,7 +153,6 @@ const updateTableNumberInFirestore = async (
   }
 };
 
-// Create a separate client component for the menu content
 function MenuContent() {
   const searchParams = useSearchParams();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -176,6 +165,7 @@ function MenuContent() {
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [tableNumber, setTableNumber] = useState<string>("");
   const [showTableModal, setShowTableModal] = useState(true);
+  const [isCartVisible, setIsCartVisible] = useState(false);
 
   useEffect(() => {
     async function loadInitialData() {
@@ -186,7 +176,6 @@ function MenuContent() {
     }
     loadInitialData();
 
-    // Setup real-time listener for orders
     const ordersRef = collection(db, "orders");
     const ordersQuery = query(
       ordersRef,
@@ -210,12 +199,10 @@ function MenuContent() {
       }
     );
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    // Check URL parameter first, then localStorage
     const tableFromUrl = searchParams.get("table");
     const savedTableNumber = localStorage.getItem("table_number");
 
@@ -231,7 +218,7 @@ function MenuContent() {
 
   const handleCategoryClick = (categoryId: string) => {
     if (selectedCategory === categoryId) {
-      setSelectedCategory(null); // Deselect category
+      setSelectedCategory(null);
     } else {
       setSelectedCategory(categoryId);
     }
@@ -242,7 +229,6 @@ function MenuContent() {
     selectedOptions: SelectedOption[] = []
   ) => {
     setCart((currentCart) => {
-      // Find existing item with the same ID and options
       const existingItem = currentCart.find(
         (cartItem) =>
           cartItem.id === item.id &&
@@ -251,7 +237,6 @@ function MenuContent() {
       );
 
       if (existingItem) {
-        // Update quantity of existing item
         return currentCart.map((cartItem) =>
           cartItem.id === item.id &&
           JSON.stringify(cartItem.selectedOptions) ===
@@ -261,7 +246,6 @@ function MenuContent() {
         );
       }
 
-      // Add new item to cart
       return [
         ...currentCart,
         {
@@ -307,16 +291,13 @@ function MenuContent() {
     if (!tableNumber.trim()) return;
 
     try {
-      // Save to localStorage
       localStorage.setItem("table_number", tableNumber);
 
-      // Update Firestore
       await updateTableNumberInFirestore(tableNumber, getDeviceId());
 
       setShowTableModal(false);
     } catch (error) {
       console.error("Error updating table number:", error);
-      // Optionally show an error message to the user
       alert("Failed to update table number. Please try again.");
     }
   };
@@ -377,12 +358,42 @@ function MenuContent() {
     setShowTableModal(true);
   };
 
+  const handleCartToggle = () => {
+    setIsCartVisible((prev) => !prev);
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <button
+        onClick={handleCartToggle}
+        className="fixed top-4 right-4 bg-orange-500 text-white p-3 rounded-full shadow-lg hover:bg-orange-600 transition-colors"
+        aria-label="View Cart"
+      >
+        <FaShoppingCart className="h-5 w-5" />
+      </button>
+      {isCartVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white w-full h-full p-4 shadow-xl">
+            <Cart
+              cart={cart}
+              onUpdateQuantity={handleUpdateQuantity}
+              onOrderNow={handleOrderNow}
+              isSubmitting={isSubmitting}
+            />
+            <button
+              onClick={() => setIsCartVisible(false)}
+              className="mt-4 bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition-colors focus:outline-none"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {showTableModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
@@ -433,9 +444,7 @@ function MenuContent() {
       )}
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Main Content */}
         <div className="flex-1">
-          {/* Categories Section */}
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
               Categories
@@ -582,21 +591,8 @@ function MenuContent() {
             </div>
           </div>
 
-          {/* Order History moved below menu items */}
           <div className="mt-8">
             <OrderHistory orders={orders} isLoadingOrders={isLoadingOrders} />
-          </div>
-        </div>
-
-        {/* Cart Section */}
-        <div className="lg:w-96">
-          <div className="lg:sticky lg:top-4">
-            <Cart
-              cart={cart}
-              onUpdateQuantity={handleUpdateQuantity}
-              onOrderNow={handleOrderNow}
-              isSubmitting={isSubmitting}
-            />
           </div>
         </div>
       </div>
@@ -604,7 +600,6 @@ function MenuContent() {
   );
 }
 
-// Update the main page component
 const MenuPage = () => {
   return (
     <Suspense fallback={<div>Loading...</div>}>
