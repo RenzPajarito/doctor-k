@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { db } from "@/lib/firebase.config";
 import {
   collection,
@@ -15,7 +15,8 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import Cart from "@/app/components/Cart";
 import OrderHistory from "@/app/components/OrderHistory";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 // Category represents a food or drink category
 export interface Category {
@@ -64,6 +65,25 @@ export interface SelectedOption {
   price: number;
 }
 
+// Add these interfaces for Firestore data
+interface CategoryData {
+  name: string;
+}
+
+interface MenuItemData {
+  name: string;
+  price: number;
+  category: string;
+  imageUrl?: string;
+  options?: {
+    id: string;
+    name: string;
+    isRequired: boolean;
+    maxSelections?: number;
+    price: number;
+  }[];
+}
+
 // Add function to get/generate device ID
 const getDeviceId = () => {
   const storageKey = "device_id";
@@ -88,7 +108,7 @@ const saveOrder = async (order: Omit<Order, "id">) => {
   }
 };
 
-// Replace getServerSideProps with a new data fetching function
+// Update the fetchMenuData function with proper typing
 async function fetchMenuData() {
   try {
     const categoriesSnapshot = await getDocs(collection(db, "categories"));
@@ -96,16 +116,14 @@ async function fetchMenuData() {
 
     const categories: Category[] = categoriesSnapshot.docs.map((doc) => ({
       id: doc.id,
-      name: doc.data().name,
+      name: (doc.data() as CategoryData).name,
     }));
 
     const menuItems: MenuItem[] = menuItemsSnapshot.docs.map((doc) => ({
       id: doc.id,
-      name: doc.data().name,
-      price: doc.data().price,
-      category: doc.data().category,
-      imageUrl: doc.data().imageUrl || "",
-      options: doc.data().options || [],
+      ...(doc.data() as MenuItemData),
+      imageUrl: (doc.data() as MenuItemData).imageUrl || "",
+      options: (doc.data() as MenuItemData).options || [],
     }));
 
     return { categories, menuItems };
@@ -114,45 +132,6 @@ async function fetchMenuData() {
     return { categories: [], menuItems: [] };
   }
 }
-
-// Add function to fetch orders from Firestore
-const fetchOrders = async (deviceId: string) => {
-  try {
-    // Create a basic query first
-    const ordersRef = collection(db, "orders");
-    let ordersQuery = query(
-      ordersRef,
-      where("deviceId", "==", deviceId),
-      orderBy("createdAt", "desc")
-    );
-
-    try {
-      const ordersSnapshot = await getDocs(ordersQuery);
-      return ordersSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Order[];
-    } catch (error: any) {
-      // Check if the error is due to missing index
-      if (error.code === "failed-precondition") {
-        console.error(
-          "This query requires a composite index. Please create it in the Firebase Console."
-        );
-        // Fallback to a simpler query without ordering
-        ordersQuery = query(ordersRef, where("deviceId", "==", deviceId));
-        const fallbackSnapshot = await getDocs(ordersQuery);
-        return fallbackSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Order[];
-      }
-      throw error;
-    }
-  } catch (error) {
-    console.error("Error fetching orders: ", error);
-    return [];
-  }
-};
 
 // Add this function to update orders in Firestore
 const updateTableNumberInFirestore = async (
@@ -183,9 +162,8 @@ const updateTableNumberInFirestore = async (
   }
 };
 
-// Update the MenuPage component to fetch data client-side
-const MenuPage = () => {
-  const router = useRouter();
+// Create a separate client component for the menu content
+function MenuContent() {
   const searchParams = useSearchParams();
   const [categories, setCategories] = useState<Category[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -263,11 +241,6 @@ const MenuPage = () => {
     selectedOptions: SelectedOption[] = []
   ) => {
     setCart((currentCart) => {
-      // Create a unique key for the item based on its ID and selected options
-      const itemKey = `${item.id}-${selectedOptions
-        .map((o) => o.id)
-        .join("-")}`;
-
       // Find existing item with the same ID and options
       const existingItem = currentCart.find(
         (cartItem) =>
@@ -516,10 +489,12 @@ const MenuPage = () => {
                   >
                     {item.imageUrl && (
                       <div className="aspect-w-16 aspect-h-9">
-                        <img
+                        <Image
                           src={item.imageUrl}
                           alt={item.name}
                           className="w-full h-48 object-cover"
+                          width={500}
+                          height={500}
                         />
                       </div>
                     )}
@@ -615,6 +590,15 @@ const MenuPage = () => {
         </div>
       </div>
     </div>
+  );
+}
+
+// Update the main page component
+const MenuPage = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MenuContent />
+    </Suspense>
   );
 };
 
