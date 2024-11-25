@@ -500,12 +500,12 @@ function MenuContent() {
                         />
                       </div>
                     )}
-                    <div className="p-4">
+                    <div className="p-2">
                       <div className="flex justify-between items-center mb-3">
-                        <h3 className="font-medium text-gray-900">
+                        <h3 className="font-medium text-sm sm:text-md text-gray-900">
                           {item.name}
                         </h3>
-                        <p className="text-lg font-semibold text-orange-600">
+                        <p className="text-sm sm:text-lg font-semibold text-orange-600">
                           ₱{item.price.toFixed(2)}
                         </p>
                       </div>
