@@ -114,7 +114,7 @@ const PaymentModal = ({
             </h4>
             <div className="text-center flex flex-col items-center">
               <Image
-                src="/placeholder.png"
+                src="/gcashqr.png"
                 alt="GCash QR Code"
                 className="w-48 h-48"
                 width={192}
