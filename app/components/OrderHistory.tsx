@@ -105,7 +105,7 @@ const OrderHistory = ({ orders, isLoadingOrders }: OrderHistoryProps) => {
                 ))}
               </div>
 
-              {order.status === "completed" && (
+              {order.status === "completed" && (!order.paymentStatus || order.paymentStatus === 'pending') ? (
                 <button
                   onClick={() => handlePaymentClick(order)}
                   className="w-full mt-3 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
@@ -115,6 +115,10 @@ const OrderHistory = ({ orders, isLoadingOrders }: OrderHistoryProps) => {
                 >
                   Process Payment
                 </button>
+              ) : order.paymentStatus === 'paid' && (
+                <div className="w-full mt-3 px-4 py-2 bg-green-100 text-green-800 rounded-md text-center">
+                  Payment Completed - Thank You!
+                </div>
               )}
             </div>
           ))}

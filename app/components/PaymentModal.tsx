@@ -65,6 +65,7 @@ const PaymentModal = ({
       const orderRef = doc(db, "orders", orderId);
       await updateDoc(orderRef, {
         paymentMethod: selectedMethod.toLowerCase(),
+        paymentStatus: "paid",
         status: "completed",
         ...(selectedMethod === "GCash" && {
           paymentProof: paymentProof.trim(),

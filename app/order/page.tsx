@@ -56,6 +56,7 @@ export interface Order {
   status: "pending" | "completed" | "cancelled";
   createdAt: number;
   paymentMethod?: "cash" | "gcash";
+  paymentStatus: "pending" | "paid";
 }
 
 // Add new interface for selected options
@@ -334,6 +335,7 @@ function MenuContent() {
         status: "pending",
         createdAt: Date.now(),
         paymentMethod: "cash",
+        paymentStatus: "pending"
       };
 
       const orderId = await saveOrder(newOrder);
@@ -342,7 +344,7 @@ function MenuContent() {
       setOrders((prevOrders) => {
         const orderExists = prevOrders.some((order) => order.id === orderId);
         if (orderExists) {
-          return prevOrders; // If the order exists, don't update
+          return prevOrders;
         }
         return [
           {
