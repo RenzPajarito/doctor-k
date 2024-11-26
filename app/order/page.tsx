@@ -602,7 +602,7 @@ function MenuContent() {
 
 const MenuPage = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>loading...</div>}>
       <MenuContent />
     </Suspense>
   );
