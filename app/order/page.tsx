@@ -54,6 +54,7 @@ export interface Order {
   createdAt: number;
   paymentMethod?: "cash" | "gcash";
   paymentStatus: "pending" | "paid";
+  orderNumber: string;
 }
 
 export interface SelectedOption {
@@ -166,6 +167,7 @@ function MenuContent() {
   const [tableNumber, setTableNumber] = useState<string>("");
   const [showTableModal, setShowTableModal] = useState(true);
   const [isCartVisible, setIsCartVisible] = useState(false);
+  const [notification, setNotification] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadInitialData() {
@@ -235,6 +237,9 @@ function MenuContent() {
           JSON.stringify(cartItem.selectedOptions) ===
             JSON.stringify(selectedOptions)
       );
+
+      setNotification(`${item.name} has been added to your cart!`);
+      setTimeout(() => setNotification(null), 2000);
 
       if (existingItem) {
         return currentCart.map((cartItem) =>
@@ -317,6 +322,7 @@ function MenuContent() {
         createdAt: Date.now(),
         paymentMethod: "cash",
         paymentStatus: "pending",
+        orderNumber: String(Math.floor(10000 + Math.random() * 90000)).slice(1),
       };
 
       const orderId = await saveOrder(newOrder);
@@ -353,6 +359,8 @@ function MenuContent() {
     0
   );
 
+  const cartTotalQuantity = cart.reduce((total, item) => total + item.quantity, 0);
+
   // Add this handler
   const handleTableNumberClick = () => {
     setShowTableModal(true);
@@ -368,12 +376,22 @@ function MenuContent() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
+      {notification && (
+        <div className="fixed bottom-4 left-4 bg-green-500 text-white p-3 rounded-md shadow-lg">
+          {notification}
+        </div>
+      )}
       <button
         onClick={handleCartToggle}
         className="fixed top-4 right-4 bg-orange-500 text-white p-3 rounded-full shadow-lg hover:bg-orange-600 transition-colors"
         aria-label="View Cart"
       >
         <FaShoppingCart className="h-5 w-5" />
+        {cartTotalQuantity > 0 && (
+          <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1">
+            {cartTotalQuantity}
+          </span>
+        )}
       </button>
       {isCartVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

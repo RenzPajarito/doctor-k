@@ -1,5 +1,5 @@
 import { Order } from "@/app/order/page";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PaymentModal from "./PaymentModal";
 
 interface OrderHistoryProps {
@@ -10,6 +10,13 @@ interface OrderHistoryProps {
 const OrderHistory = ({ orders, isLoadingOrders }: OrderHistoryProps) => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+
+  useEffect(() => {
+    if (orders.some(order => order.paymentStatus === 'paid')) {
+      setShowNotification(true);
+    }
+  }, [orders]);
 
   const handlePaymentSubmit = (method: string) => {
     if (!selectedOrder?.id) return;
@@ -28,8 +35,21 @@ const OrderHistory = ({ orders, isLoadingOrders }: OrderHistoryProps) => {
     setSelectedOrder(null);
   };
 
+  const handleCloseNotification = () => {
+    setShowNotification(false);
+  };
+
   return (
     <div className="mt-12 border-t pt-8">
+      {showNotification && (
+        <div className="fixed top-0 left-0 right-0 p-4 bg-green-500 text-white text-center">
+          Your order has been completed and is ready to pay!
+          <button onClick={handleCloseNotification} className="ml-4 underline">
+            Close
+          </button>
+        </div>
+      )}
+
       <h2 className="text-xl font-semibold text-gray-800 mb-4">
         Order History
       </h2>
