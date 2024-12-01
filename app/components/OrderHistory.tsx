@@ -13,8 +13,15 @@ const OrderHistory = ({ orders, isLoadingOrders }: OrderHistoryProps) => {
   const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
-    if (orders.some(order => order.paymentStatus === 'paid')) {
+    if (orders.some(order => order.status === 'completed')) {
       setShowNotification(true);
+      if (Notification.permission !== 'granted') {
+        Notification.requestPermission();
+      } else {
+        new Notification('Order Notification', {
+          body: 'Your order has been completed and is ready to pay!',
+        });
+      }
     }
   }, [orders]);
 
