@@ -16,21 +16,11 @@ const OrderHistory = ({ orders, isLoadingOrders }: OrderHistoryProps) => {
     const hasUnpaidCompletedOrder = orders.some(
       (order) => order.status === 'completed' && (!order.paymentStatus || order.paymentStatus === 'pending')
     );
-  
+
     if (hasUnpaidCompletedOrder) {
       setShowNotification(true);
-  
-      if (Notification.permission !== 'granted') {
-        Notification.requestPermission();
-      } else {
-        new Notification('Order Notification', {
-          body: 'Your order has been completed and is ready to pay!',
-        });
-      }
-    } else {
-      setShowNotification(false); // Ensure notification is hidden if no such orders exist
     }
-  }, [orders]);  
+  }, [orders]);
 
   const handlePaymentSubmit = (method: string) => {
     if (!selectedOrder?.id) return;
